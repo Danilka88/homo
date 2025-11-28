@@ -27,7 +27,14 @@ export enum FurnitureType {
   STOVE = 'STOVE',
   TABLE = 'TABLE',
   DOOR = 'DOOR',
-  WINDOW = 'WINDOW'
+  WINDOW = 'WINDOW',
+  BATHTUB = 'BATHTUB',
+  SHOWER = 'SHOWER',
+  WASHER = 'WASHER',
+  FRIDGE = 'FRIDGE',
+  WARDROBE = 'WARDROBE',
+  TV = 'TV',
+  ARMCHAIR = 'ARMCHAIR'
 }
 
 export type Furniture = {

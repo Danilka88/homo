@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { useRef, useEffect, useState } from 'react';
 import { Wall, WallType, Point, Furniture, FurnitureType, EditorTool, RoomLabel } from '../types';
-import { PIXELS_PER_METER, CANVAS_SIZE, ROOM_METADATA } from '../constants';
+import { PIXELS_PER_METER, CANVAS_SIZE, ROOM_METADATA, FURNITURE_CATALOG } from '../constants';
 
 interface EditorCanvasProps {
   walls: Wall[];
@@ -264,8 +264,6 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
         const localPos = rotatePoint(pos, { x: item.x, y: item.y }, item.rotation);
         
         // Calculate new half-widths based on distance from center
-        // We use Math.abs to allow dragging across center, but generally we expect dragging outward
-        // We multiply by 2 because localPos is distance from center
         const newWidth = Math.max(20, Math.abs(localPos.x - item.x) * 2); 
         const newDepth = Math.max(20, Math.abs(localPos.y - item.y) * 2);
 
@@ -438,26 +436,104 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
       ctx.translate(item.x, item.y);
       ctx.rotate((item.rotation * Math.PI) / 180);
       
-      ctx.shadowColor = 'rgba(0,0,0,0.2)';
-      ctx.shadowBlur = 5;
-
-      ctx.fillStyle = '#fff';
+      ctx.shadowColor = 'rgba(0,0,0,0.1)';
+      ctx.shadowBlur = 4;
+      ctx.fillStyle = '#ffffff';
       ctx.strokeStyle = '#475569';
       ctx.lineWidth = 2;
 
+      const hw = item.width / 2;
+      const hd = item.depth / 2;
+
+      // SPECIFIC RENDERERS
       if (item.type === FurnitureType.TOILET) {
-         ctx.fillRect(-item.width/2, -item.depth/2, item.width, item.depth/2);
+         // Cistern
+         ctx.fillRect(-hw, -hd, item.width, item.depth * 0.3);
+         ctx.strokeRect(-hw, -hd, item.width, item.depth * 0.3);
+         // Bowl
          ctx.beginPath();
-         ctx.arc(0, 10, item.width/2, 0, Math.PI * 2);
+         ctx.ellipse(0, hd * 0.2, item.width * 0.4, item.depth * 0.5, 0, 0, Math.PI * 2);
          ctx.fill();
          ctx.stroke();
+      } else if (item.type === FurnitureType.BATHTUB) {
+         // Rounded Rect
+         ctx.beginPath();
+         ctx.roundRect(-hw, -hd, item.width, item.depth, 10);
+         ctx.fill();
+         ctx.stroke();
+         // Inner Rim
+         ctx.beginPath();
+         ctx.roundRect(-hw + 5, -hd + 5, item.width - 10, item.depth - 10, 5);
+         ctx.stroke();
+         // Drain
+         ctx.beginPath();
+         ctx.arc(-hw + 15, 0, 3, 0, Math.PI * 2);
+         ctx.fillStyle = '#cbd5e1';
+         ctx.fill();
+      } else if (item.type === FurnitureType.SHOWER) {
+         ctx.fillRect(-hw, -hd, item.width, item.depth);
+         ctx.strokeRect(-hw, -hd, item.width, item.depth);
+         // Cross
+         ctx.beginPath();
+         ctx.moveTo(-hw, -hd); ctx.lineTo(hw, hd);
+         ctx.moveTo(hw, -hd); ctx.lineTo(-hw, hd);
+         ctx.lineWidth = 1;
+         ctx.stroke();
+         // Drain
+         ctx.beginPath();
+         ctx.arc(0, 0, 4, 0, Math.PI*2);
+         ctx.fillStyle = '#fff'; ctx.fill(); ctx.stroke();
+      } else if (item.type === FurnitureType.WASHER) {
+         ctx.fillRect(-hw, -hd, item.width, item.depth);
+         ctx.strokeRect(-hw, -hd, item.width, item.depth);
+         // Circle door
+         ctx.beginPath();
+         ctx.arc(0, 0, Math.min(hw, hd) * 0.7, 0, Math.PI * 2);
+         ctx.stroke();
+         // Controls
+         ctx.beginPath();
+         ctx.rect(-hw + 5, -hd + 5, 10, 5);
+         ctx.stroke();
+      } else if (item.type === FurnitureType.STOVE) {
+         ctx.fillRect(-hw, -hd, item.width, item.depth);
+         ctx.strokeRect(-hw, -hd, item.width, item.depth);
+         // Burners
+         ctx.fillStyle = '#000';
+         ctx.beginPath(); ctx.arc(-hw/2, -hd/2, 3, 0, Math.PI*2); ctx.fill();
+         ctx.beginPath(); ctx.arc(hw/2, -hd/2, 3, 0, Math.PI*2); ctx.fill();
+         ctx.beginPath(); ctx.arc(-hw/2, hd/2, 3, 0, Math.PI*2); ctx.fill();
+         ctx.beginPath(); ctx.arc(hw/2, hd/2, 3, 0, Math.PI*2); ctx.fill();
       } else if (item.type === FurnitureType.DOOR) {
+        const pivotX = -item.width / 2;
+        const pivotY = item.depth / 2;
+        
+        ctx.fillStyle = '#ffffff'; 
+        ctx.fillRect(-item.width/2, -item.depth/2, item.width, item.depth);
+        
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(-item.width/2, 0);
-        ctx.lineTo(-item.width/2, -item.width);
-        ctx.arc(-item.width/2, 0, item.width, -Math.PI/2, 0);
+        ctx.moveTo(-item.width/2, -item.depth/2);
+        ctx.lineTo(-item.width/2, item.depth/2);
+        ctx.moveTo(item.width/2, -item.depth/2);
+        ctx.lineTo(item.width/2, item.depth/2);
         ctx.stroke();
-        ctx.fillStyle = 'transparent'; // Door swing area is clear
+
+        ctx.beginPath();
+        ctx.strokeStyle = '#cbd5e1'; 
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.arc(pivotX, pivotY, item.width, 1.5 * Math.PI, 0);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.rect(pivotX, pivotY - item.width, 8, item.width); 
+        ctx.fill();
+        ctx.stroke();
       } else if (item.type === FurnitureType.WINDOW) {
          ctx.fillStyle = '#e0f2fe'; 
          ctx.fillRect(-item.width/2, -item.depth/2, item.width, item.depth);
@@ -467,15 +543,40 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
          ctx.lineTo(0, item.depth/2);
          ctx.stroke();
       } else {
-        ctx.fillRect(-item.width/2, -item.depth/2, item.width, item.depth);
-        ctx.strokeRect(-item.width/2, -item.depth/2, item.width, item.depth);
+        // GENERIC BOX (Bed, Sofa, Table, Wardrobe, etc.)
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(-hw, -hd, item.width, item.depth);
+        ctx.strokeRect(-hw, -hd, item.width, item.depth);
         
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = '#64748b';
-        ctx.font = '20px sans-serif'; 
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(item.type.charAt(0), 0, 0);
+        // Specific details for some generics
+        if (item.type === FurnitureType.BED) {
+           // Pillow
+           ctx.strokeRect(-hw + 5, -hd + 5, item.width - 10, 15);
+           ctx.strokeRect(-hw + 5, -hd + 25, item.width - 10, item.depth - 30);
+        } else if (item.type === FurnitureType.SOFA || item.type === FurnitureType.ARMCHAIR) {
+           // Backrest and armrests
+           ctx.beginPath();
+           ctx.moveTo(-hw, -hd + 10); ctx.lineTo(hw, -hd + 10);
+           ctx.moveTo(-hw + 10, -hd); ctx.lineTo(-hw + 10, hd);
+           ctx.moveTo(hw - 10, -hd); ctx.lineTo(hw - 10, hd);
+           ctx.strokeStyle = '#cbd5e1';
+           ctx.stroke();
+        }
+      }
+
+      // 7. FURNITURE NAME LABEL (Rotated with object)
+      if (item.type !== FurnitureType.DOOR && item.type !== FurnitureType.WINDOW) {
+          ctx.fillStyle = '#64748b';
+          // Find catalog name
+          const catItem = FURNITURE_CATALOG.find(c => c.type === item.type);
+          const name = catItem ? catItem.name : item.type;
+          
+          // Font size scales slightly with object size but clamped
+          const fontSize = Math.min(12, Math.max(8, item.width / 5));
+          ctx.font = `${fontSize}px sans-serif`; 
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(name, 0, 0);
       }
       
       // SELECTION OVERLAY & RESIZE HANDLES

@@ -26,18 +26,26 @@ export const INITIAL_WALLS: Wall[] = [
 ];
 
 export const INITIAL_FURNITURE: Furniture[] = [
-  { id: 'f1', type: FurnitureType.TOILET, x: 250, y: 250, width: 40, depth: 60, rotation: 0 },
-  { id: 'f2', type: FurnitureType.DOOR, x: 400, y: 300, width: 80, depth: 10, rotation: 90 },
-  { id: 'f3', type: FurnitureType.WINDOW, x: 500, y: 200, width: 100, depth: 10, rotation: 0 },
+  { id: 'f1', type: FurnitureType.TOILET, x: 250, y: 250, width: 20, depth: 30, rotation: 0 },
+  { id: 'f2', type: FurnitureType.DOOR, x: 400, y: 300, width: 40, depth: 10, rotation: 90 },
+  { id: 'f3', type: FurnitureType.WINDOW, x: 500, y: 200, width: 75, depth: 10, rotation: 0 },
 ];
 
+// Scaled sizes: 50px = 1 meter
 export const FURNITURE_CATALOG = [
-  { type: FurnitureType.BED, name: 'Кровать', width: 160, depth: 200, icon: 'BedDouble' },
-  { type: FurnitureType.SOFA, name: 'Диван', width: 200, depth: 90, icon: 'Armchair' },
-  { type: FurnitureType.TOILET, name: 'Унитаз', width: 40, depth: 60, icon: 'Bath' }, // closest generic
-  { type: FurnitureType.SINK, name: 'Раковина', width: 60, depth: 50, icon: 'Droplets' },
-  { type: FurnitureType.STOVE, name: 'Плита (Газ)', width: 60, depth: 60, icon: 'Flame' },
-  { type: FurnitureType.TABLE, name: 'Стол', width: 120, depth: 80, icon: 'Table' },
+  { type: FurnitureType.BED, name: 'Кровать', width: 80, depth: 100, icon: 'BedDouble' }, // 1.6x2.0m
+  { type: FurnitureType.SOFA, name: 'Диван', width: 100, depth: 45, icon: 'Armchair' }, // 2.0x0.9m
+  { type: FurnitureType.ARMCHAIR, name: 'Кресло', width: 45, depth: 45, icon: 'Armchair' }, // 0.9x0.9m
+  { type: FurnitureType.TABLE, name: 'Стол', width: 60, depth: 40, icon: 'Table' }, // 1.2x0.8m
+  { type: FurnitureType.WARDROBE, name: 'Шкаф', width: 60, depth: 30, icon: 'Box' }, // 1.2x0.6m
+  { type: FurnitureType.TV, name: 'ТВ Тумба', width: 75, depth: 20, icon: 'Tv' }, // 1.5x0.4m
+  { type: FurnitureType.FRIDGE, name: 'Холодильник', width: 30, depth: 30, icon: 'Refrigerator' }, // 60x60cm
+  { type: FurnitureType.STOVE, name: 'Плита', width: 30, depth: 30, icon: 'Flame' }, // 60x60cm
+  { type: FurnitureType.SINK, name: 'Раковина', width: 30, depth: 25, icon: 'Droplets' }, // 60x50cm
+  { type: FurnitureType.TOILET, name: 'Унитаз', width: 20, depth: 30, icon: 'Bath' }, // 40x60cm
+  { type: FurnitureType.BATHTUB, name: 'Ванна', width: 85, depth: 35, icon: 'Bath' }, // 170x70cm
+  { type: FurnitureType.SHOWER, name: 'Душ', width: 45, depth: 45, icon: 'ShowerHead' }, // 90x90cm
+  { type: FurnitureType.WASHER, name: 'Стир.маш', width: 30, depth: 30, icon: 'Waves' }, // 60x60cm
 ];
 
 export const MOCK_ANALYSIS_RESPONSE = `
