@@ -1,11 +1,20 @@
 
-## Run Locally
-
-**Prerequisites:**  Node.js
+## Запуск локально
 
 
-1. Install dependencies:
+
+**Предварительные требования:** Node.js
+
+
+
+
+
+1. Установите зависимости:
+
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
+
+2. Укажите `GEMINI_API_KEY` в файле [.env.local](.env.local), заменив на ваш ключ Gemini API.
+
+3. Запустите приложение:
+
    `npm run dev`
