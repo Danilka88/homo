@@ -1,5 +1,5 @@
 
-import { Wall, WallType, Furniture, FurnitureType, RoomType } from './types';
+import { Wall, WallType, Furniture, FurnitureType, RoomType, CatalogItem } from './types';
 
 export const PIXELS_PER_METER = 50; // 1 meter = 50 pixels on canvas
 export const CANVAS_SIZE = 2000;
@@ -62,3 +62,21 @@ export const MOCK_ANALYSIS_RESPONSE = `
   }
 ]
 `;
+
+export const MOCK_CATALOG_ITEMS: CatalogItem[] = [
+  // Wallpaper
+  { id: 'w1', category: 'WALLPAPER', title: 'Обои: Лофт Серый Бетон', image: './assets/1.png' },
+  { id: 'w2', category: 'WALLPAPER', title: 'Обои: Сканди Узор', image: './assets/2.png' },
+  { id: 'w3', category: 'WALLPAPER', title: 'Обои: Классика Беж', image: './assets/3.png' },
+  { id: 'w4', category: 'WALLPAPER', title: 'Краска: Глубокий Синий', image: './assets/4.png' },
+  
+  // Flooring
+  { id: 'fl1', category: 'FLOORING', title: 'Ламинат: Дуб Натуральный', image: './assets/5.png' },
+  { id: 'fl2', category: 'FLOORING', title: 'Плитка: Мрамор', image: './assets/6.png' },
+  { id: 'fl3', category: 'FLOORING', title: 'Паркет: Орех', image: './assets/7.png' },
+
+  // Furniture (Visual style)
+  { id: 'fn1', category: 'FURNITURE', title: 'Диван: Угловой Modern', image: './assets/8.png' },
+  { id: 'fn2', category: 'FURNITURE', title: 'Кровать: King Size Soft', image: './assets/9.png' },
+  { id: 'fn3', category: 'FURNITURE', title: 'Кухня: Минимализм Белый', image: './assets/10.png' },
+];

@@ -75,7 +75,18 @@ export type Violation = {
 export enum AppMode {
   UPLOAD = 'UPLOAD',
   EDITOR = 'EDITOR',
-  PREVIEW_3D = 'PREVIEW_3D'
+  PREVIEW_3D = 'PREVIEW_3D',
+  CATALOG = 'CATALOG'
 }
 
 export type EditorTool = 'SELECT' | 'HAND' | 'WALL_BEARING' | 'WALL_PARTITION' | 'WALL_DEMOLITION' | 'ERASER' | 'DOOR' | 'WINDOW' | 'FURNITURE' | 'ROOM_LABEL';
+
+// Catalog Types
+export type CatalogCategory = 'WALLPAPER' | 'FLOORING' | 'FURNITURE';
+
+export interface CatalogItem {
+  id: string;
+  category: CatalogCategory;
+  title: string;
+  image: string; // path to png
+}

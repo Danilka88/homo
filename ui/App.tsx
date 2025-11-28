@@ -18,11 +18,16 @@ import {
   X,
   AppWindow,
   Tag,
-  Droplets
+  Droplets,
+  FileText,
+  Check,
+  ShoppingBag,
+  Sparkles,
+  ArrowLeft
 } from 'lucide-react';
 import EditorCanvas from './components/EditorCanvas';
-import { Wall, Furniture, AppMode, EditorTool, Violation, WallType, FurnitureType, RoomLabel, RoomType } from './types';
-import { INITIAL_WALLS, INITIAL_FURNITURE, FURNITURE_CATALOG, ROOM_METADATA } from './constants';
+import { Wall, Furniture, AppMode, EditorTool, Violation, WallType, FurnitureType, RoomLabel, RoomType, CatalogCategory } from './types';
+import { INITIAL_WALLS, INITIAL_FURNITURE, FURNITURE_CATALOG, ROOM_METADATA, MOCK_CATALOG_ITEMS } from './constants';
 import { GeminiService } from './services/geminiService';
 
 export default function App() {
@@ -40,6 +45,15 @@ export default function App() {
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiSuggestion, setAiSuggestion] = useState('');
   
+  // Modal State
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+  const [orderFormSent, setOrderFormSent] = useState(false);
+  
+  // Catalog & Viz State
+  const [selectedCatalogItems, setSelectedCatalogItems] = useState<Set<string>>(new Set());
+  const [vizLoading, setVizLoading] = useState(false);
+  const [vizResultOpen, setVizResultOpen] = useState(false);
+
   // Responsive UI State
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
 
@@ -96,6 +110,40 @@ export default function App() {
     setAiSuggestion('Думаю...');
     const result = await GeminiService.generateIdeas(aiPrompt, walls);
     setAiSuggestion(result);
+  };
+
+  const handleOrderSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Simulate API call
+    setOrderFormSent(true);
+    setTimeout(() => {
+      setOrderFormSent(false);
+      setIsOrderModalOpen(false);
+    }, 3000);
+  };
+
+  // Catalog Logic
+  const toggleCatalogItem = (id: string) => {
+    const newSet = new Set(selectedCatalogItems);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setSelectedCatalogItems(newSet);
+  };
+
+  const handleGenerateViz = () => {
+    if (selectedCatalogItems.size === 0) {
+      alert("Выберите хотя бы один материал или мебель для визуализации.");
+      return;
+    }
+    setVizLoading(true);
+    // Simulate processing delay
+    setTimeout(() => {
+      setVizLoading(false);
+      setVizResultOpen(true);
+    }, 2500);
   };
 
   // 3D Render (Simulated)
@@ -214,6 +262,122 @@ export default function App() {
     return render3DView();
   }
 
+  if (mode === AppMode.CATALOG) {
+    const categories: { id: CatalogCategory, label: string }[] = [
+      { id: 'WALLPAPER', label: 'Обои и Стены' },
+      { id: 'FLOORING', label: 'Напольные покрытия' },
+      { id: 'FURNITURE', label: 'Мебель и Декор' },
+    ];
+
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+         <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 sticky top-0 z-30">
+            <div className="flex items-center gap-2">
+               <button onClick={() => setMode(AppMode.EDITOR)} className="p-2 hover:bg-slate-100 rounded-full">
+                 <ArrowLeft className="w-5 h-5 text-slate-600" />
+               </button>
+               <h1 className="font-bold text-lg text-slate-800">Каталог материалов</h1>
+            </div>
+            <button 
+              onClick={handleGenerateViz}
+              disabled={vizLoading}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium transition-all shadow-md shadow-purple-200 disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {vizLoading ? <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" /> : <Sparkles className="w-4 h-4" />}
+              {vizLoading ? 'Генерация...' : 'Создать визуализацию'}
+            </button>
+         </header>
+
+         <main className="flex-1 p-4 md:p-8 max-w-6xl mx-auto w-full space-y-8 pb-20">
+           {categories.map(cat => (
+             <section key={cat.id}>
+               <h2 className="text-xl font-bold text-slate-800 mb-4">{cat.label}</h2>
+               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {MOCK_CATALOG_ITEMS.filter(item => item.category === cat.id).map(item => {
+                    const isSelected = selectedCatalogItems.has(item.id);
+                    return (
+                      <div 
+                        key={item.id}
+                        onClick={() => toggleCatalogItem(item.id)}
+                        className={`group cursor-pointer rounded-xl bg-white border-2 overflow-hidden transition-all shadow-sm hover:shadow-md ${
+                          isSelected ? 'border-green-500 ring-2 ring-green-100' : 'border-transparent hover:border-slate-200'
+                        }`}
+                      >
+                         <div className="aspect-square bg-slate-100 relative">
+                           {/* Placeholder logic if image fails or is dummy path */}
+                           <img 
+                              src={item.image} 
+                              alt={item.title} 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300?text=' + encodeURIComponent(item.title);
+                              }}
+                           />
+                           {isSelected && (
+                             <div className="absolute top-2 right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white shadow-lg">
+                               <Check className="w-5 h-5" />
+                             </div>
+                           )}
+                         </div>
+                         <div className="p-3">
+                           <h3 className="text-sm font-medium text-slate-700 group-hover:text-blue-600">{item.title}</h3>
+                         </div>
+                      </div>
+                    )
+                  })}
+               </div>
+             </section>
+           ))}
+         </main>
+
+         {/* RESULT MODAL */}
+         {vizResultOpen && (
+            <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+               <div className="bg-white rounded-2xl max-w-4xl w-full p-1 overflow-hidden shadow-2xl relative">
+                  <div className="absolute top-4 right-4 z-10">
+                     <button onClick={() => setVizResultOpen(false)} className="bg-black/50 hover:bg-black/70 text-white p-2 rounded-full backdrop-blur-sm">
+                       <X className="w-6 h-6" />
+                     </button>
+                  </div>
+                  <div className="w-full aspect-video bg-slate-100 relative flex items-center justify-center">
+                    <img 
+                      src="./assets/result.png" 
+                      alt="Visualization Result" 
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                         // Fallback text if user hasn't put the image yet
+                         (e.target as HTMLImageElement).style.display = 'none';
+                         const parent = (e.target as HTMLImageElement).parentElement;
+                         if(parent) {
+                             parent.innerHTML = `<div class="text-center p-8"><p class="text-xl font-bold text-slate-400 mb-2">Файл result.png не найден</p><p class="text-slate-500">Пожалуйста, добавьте result.png в папку /assets/</p></div>`;
+                         }
+                      }}
+                    />
+                  </div>
+                  <div className="p-6 bg-white flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div>
+                      <h3 className="text-xl font-bold text-slate-800 mb-2">Ваша визуализация готова!</h3>
+                      <p className="text-slate-600 max-w-xl">
+                        Мы готовы реализовать проект ремонта вашей квартиры с учетом всех ваших пожеланий и выбранных материалов.
+                      </p>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        setVizResultOpen(false);
+                        setIsOrderModalOpen(true);
+                      }}
+                      className="px-6 py-3 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-colors shadow-lg shadow-green-200 whitespace-nowrap"
+                    >
+                      Заказать ремонт
+                    </button>
+                  </div>
+               </div>
+            </div>
+         )}
+      </div>
+    );
+  }
+
   // EDITOR MODE
   return (
     <div className="fixed inset-0 flex flex-col bg-slate-100 overflow-hidden font-sans">
@@ -225,6 +389,15 @@ export default function App() {
             <Layout className="w-5 h-5" />
           </div>
           <span className="font-bold text-slate-800 hidden sm:block">Хомо Готово</span>
+          
+          {/* NEW BUTTON: ORDER DOCS */}
+          <button 
+             onClick={() => setIsOrderModalOpen(true)}
+             className="ml-4 hidden md:flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium transition-colors shadow-sm shadow-green-200"
+          >
+             <FileText className="w-4 h-4" />
+             Заказать оформление
+          </button>
         </div>
         
         <div className="flex items-center gap-2 md:gap-4">
@@ -240,6 +413,14 @@ export default function App() {
                className="w-8 h-8 flex items-center justify-center rounded hover:bg-white text-slate-600 font-bold"
              >+</button>
            </div>
+
+           {/* CATALOG BUTTON */}
+           <button 
+             onClick={() => setMode(AppMode.CATALOG)}
+             className="flex items-center gap-2 px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 text-sm font-medium transition-colors"
+           >
+             <ShoppingBag className="w-4 h-4" /> <span className="hidden sm:inline">Каталог</span>
+           </button>
            
            <button 
              onClick={() => setMode(AppMode.PREVIEW_3D)}
@@ -448,6 +629,61 @@ export default function App() {
             onClick={() => setIsRightSidebarOpen(false)}
           />
         )}
+
+        {/* ORDER MODAL */}
+        {isOrderModalOpen && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+             <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
+                <button 
+                   onClick={() => setIsOrderModalOpen(false)}
+                   className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+                >
+                   <X className="w-6 h-6" />
+                </button>
+                
+                {orderFormSent ? (
+                   <div className="text-center py-12">
+                      <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                         <Check className="w-8 h-8" />
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-800 mb-2">Заявка отправлена!</h3>
+                      <p className="text-slate-500">Наш специалист свяжется с вами в ближайшее время для уточнения деталей.</p>
+                   </div>
+                ) : (
+                   <>
+                     <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <FileText className="w-6 h-6 text-green-600" />
+                        Оформление перепланировки
+                     </h2>
+                     <p className="text-sm text-slate-600 mb-6 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        Мы обеспечим оформление и реализацию перепланировки вашей квартиры <strong>«под ключ»</strong>. 
+                        Готовы предложить лучшие условия и профессионалов, которые учтут все моменты законодательства и требований (СНиП, ЖК РФ).
+                     </p>
+                     
+                     <form onSubmit={handleOrderSubmit} className="space-y-4">
+                        <div>
+                           <label className="block text-sm font-medium text-slate-700 mb-1">Ваше имя</label>
+                           <input type="text" required className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Иван" />
+                        </div>
+                        <div>
+                           <label className="block text-sm font-medium text-slate-700 mb-1">Телефон</label>
+                           <input type="tel" required className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="+7 (999) 000-00-00" />
+                        </div>
+                        <div>
+                           <label className="block text-sm font-medium text-slate-700 mb-1">Комментарий (необязательно)</label>
+                           <textarea className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 h-20" placeholder="Например: хочу объединить кухню с гостиной..." />
+                        </div>
+                        
+                        <button type="submit" className="w-full py-3 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-colors">
+                           Отправить заявку
+                        </button>
+                     </form>
+                   </>
+                )}
+             </div>
+          </div>
+        )}
+
       </div>
     </div>
   );
