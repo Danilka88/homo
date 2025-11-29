@@ -26,6 +26,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import EditorCanvas from './components/EditorCanvas';
+import Preview3D from './components/Preview3D';
 import { Wall, Furniture, AppMode, EditorTool, Violation, WallType, FurnitureType, RoomLabel, RoomType, CatalogCategory } from './types';
 import { INITIAL_WALLS, INITIAL_FURNITURE, FURNITURE_CATALOG, ROOM_METADATA, MOCK_CATALOG_ITEMS } from './constants';
 import { GeminiService } from './services/geminiService';
@@ -146,87 +147,6 @@ export default function App() {
     }, 2500);
   };
 
-  // 3D Render (Simulated)
-  const render3DView = () => {
-    return (
-      <div className="w-full h-full bg-slate-900 overflow-hidden relative perspective-[1000px] flex items-center justify-center">
-        <div className="absolute top-4 left-4 z-50">
-           <button onClick={() => setMode(AppMode.EDITOR)} className="bg-white/10 text-white px-4 py-2 rounded hover:bg-white/20">Назад в 2D</button>
-        </div>
-        <div 
-          className="relative transform-style-3d rotate-x-60 rotate-z-45 transition-transform duration-500"
-          style={{ width: '800px', height: '800px', transform: 'rotateX(60deg) rotateZ(-30deg) scale(0.6)' }}
-        >
-          {/* Floor */}
-          <div className="absolute inset-0 bg-slate-800 shadow-2xl border-2 border-slate-700 opacity-90" />
-          
-          {/* Walls 3D */}
-          {walls.map(wall => {
-             const length = Math.sqrt(Math.pow(wall.end.x - wall.start.x, 2) + Math.pow(wall.end.y - wall.start.y, 2));
-             const angle = Math.atan2(wall.end.y - wall.start.y, wall.end.x - wall.start.x) * (180 / Math.PI);
-             
-             let color = 'bg-slate-400';
-             let height = '120px';
-             if (wall.type === WallType.BEARING) color = 'bg-green-600';
-             if (wall.type === WallType.DEMOLITION) {
-                color = 'bg-red-500/50';
-                height = '20px';
-             }
-
-             return (
-               <div 
-                  key={wall.id}
-                  className={`absolute bottom-0 transform-origin-left border border-white/20 shadow-lg ${color}`}
-                  style={{
-                    left: wall.start.x,
-                    top: wall.start.y,
-                    width: `${length}px`,
-                    height: height,
-                    transform: `rotateZ(${angle}deg) rotateX(-90deg)`,
-                    transformOrigin: '0% 0%',
-                    opacity: 0.9
-                  }}
-               />
-             )
-          })}
-
-          {/* Furniture Simple Blocks */}
-          {furniture.map(item => (
-            <div 
-              key={item.id}
-              className="absolute bg-blue-500/80 border border-blue-400"
-              style={{
-                left: item.x - item.width/2,
-                top: item.y - item.depth / 2,
-                width: item.width,
-                height: item.depth,
-                transform: `translateZ(20px)`, // Elevated slightly
-                boxShadow: '0 10px 20px rgba(0,0,0,0.3)'
-              }}
-            >
-              <div className="text-white text-xs flex items-center justify-center h-full">{item.type.charAt(0)}</div>
-            </div>
-          ))}
-
-          {/* Room Labels 3D */}
-           {rooms.map(room => (
-            <div 
-              key={room.id}
-              className="absolute text-white text-lg font-bold bg-black/50 px-2 rounded transform-style-3d"
-              style={{
-                left: room.x,
-                top: room.y,
-                transform: `translateZ(150px) rotateX(-90deg) rotateY(0deg) rotateZ(30deg)`, // Billboard effect roughly
-              }}
-            >
-              {ROOM_METADATA[room.type].name}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
   // Views
   if (mode === AppMode.UPLOAD) {
     return (
@@ -259,7 +179,15 @@ export default function App() {
   }
 
   if (mode === AppMode.PREVIEW_3D) {
-    return render3DView();
+    return (
+       <Preview3D 
+          walls={walls} 
+          furniture={furniture} 
+          rooms={rooms} 
+          backgroundImage={uploadedImage}
+          onBack={() => setMode(AppMode.EDITOR)} 
+       />
+    );
   }
 
   if (mode === AppMode.CATALOG) {
